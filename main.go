@@ -49,9 +49,24 @@ func initDB() *gorm.DB {
 	return db
 }
 
+func CORSMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*") // Em produção, mude "*" para o domínio da Vercel
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+		c.Next()
+	}
+}
+
 func main() {
 	db := initDB()
 	r := gin.Default()
+	r.Use(CORSMiddleware())
 
 	// POST /shuffle - Realiza o sorteio e salva
 	r.POST("/shuffle", func(c *gin.Context) {
