@@ -80,12 +80,12 @@ func main() {
 		teams, bench := DistributeTeams(req.Players, req.PlayersPerTeam)
 
 		// Serializa o resultado completo (times + banco) para o SQLite
-		fullResult := struct {
-			Teams []Team   `json:"teams"`
-			Bench []string `json:"bench"`
-		}{teams, bench}
+		resultData := gin.H{
+			"teams": teams,
+			"bench": bench,
+		}
 
-		resultJSON, _ := json.Marshal(fullResult)
+		resultJSON, _ := json.Marshal(resultData)
 
 		match := Match{
 			ID:     uuid.New().String()[:8],
@@ -111,13 +111,15 @@ func main() {
 			return
 		}
 
-		var teams interface{}
-		json.Unmarshal([]byte(match.Result), &teams)
+		var resultData map[string]any
+		json.Unmarshal([]byte(match.Result), &resultData)
 
 		c.JSON(http.StatusOK, gin.H{
+			"id":    match.ID,
 			"name":  match.Name,
-			"teams": teams,
 			"date":  match.CreatedAt,
+			"teams": resultData["teams"],
+			"bench": resultData["bench"],
 		})
 	})
 
